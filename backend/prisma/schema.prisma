@@ -1,0 +1,70 @@
+// This is your Prisma schema file
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "windows"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Route {
+  id               String   @id @default(cuid())
+  routeId          String   @unique @map("route_id")
+  vesselType       String   @map("vessel_type")
+  fuelType         String   @map("fuel_type")
+  year             Int
+  ghgIntensity     Float    @map("ghg_intensity")
+  fuelConsumption  Float    @map("fuel_consumption")
+  distance         Float
+  totalEmissions   Float    @map("total_emissions")
+  isBaseline       Boolean  @default(false) @map("is_baseline")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("routes")
+}
+
+model ShipCompliance {
+  id          String   @id @default(cuid())
+  shipId      String   @map("ship_id")
+  year        Int
+  cbGco2eq    Float    @map("cb_gco2eq")
+  computedAt  DateTime @default(now()) @map("computed_at")
+
+  @@unique([shipId, year])
+  @@map("ship_compliance")
+}
+
+model BankEntry {
+  id          String   @id @default(cuid())
+  shipId      String   @map("ship_id")
+  year        Int
+  amountGco2eq Float   @map("amount_gco2eq")
+  type        String   // 'BANKED' | 'APPLIED'
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("bank_entries")
+}
+
+model Pool {
+  id        String       @id @default(cuid())
+  year      Int
+  createdAt DateTime     @default(now()) @map("created_at")
+  members   PoolMember[]
+
+  @@map("pools")
+}
+
+model PoolMember {
+  id       String @id @default(cuid())
+  poolId   String @map("pool_id")
+  shipId   String @map("ship_id")
+  cbBefore Float  @map("cb_before")
+  cbAfter  Float  @map("cb_after")
+
+  pool Pool @relation(fields: [poolId], references: [id], onDelete: Cascade)
+
+  @@map("pool_members")
+}
